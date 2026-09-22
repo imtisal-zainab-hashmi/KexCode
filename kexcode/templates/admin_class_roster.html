@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ target_class.name }} - Roster{% endblock %}
+
+{% block main %}
+<div class="admin-roster-page">
+    <div class="roster-top-nav">
+        <a href="/admin/classes" class="back-link">&larr; Back to Classes</a>
+    </div>
+
+    <header class="roster-header">
+        <div>
+            <p class="dashboard-tag">INSTRUCTOR PORTAL</p>
+            <h1 class="page-title">{{ target_class.name }}</h1>
+            <p class="page-subtitle">Enrolled Student Roster &amp; Progress</p>
+        </div>
+        <div class="roster-meta-badges">
+            <span class="badge">{{ roster|length }} Students</span>
+            <span class="badge">{{ total_assignments }} Assignments</span>
+        </div>
+    </header>
+
+    <!-- Enroll Student Card -->
+    <div class="card enroll-card">
+        <h3>Enroll a Student</h3>
+        <p class="card-hint">Enter the registered email of the student you want to add to this class.</p>
+        <form action="/admin/classes/{{ target_class.id }}/enroll" method="POST" class="enroll-form">
+            <div class="inline-group">
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="student@example.com"
+                    required
+                    autocomplete="off"
+                    class="form-control"
+                >
+                <button type="submit" class="btn btn-primary">+ Enroll Student</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Student Table Section -->
+    <section class="roster-table-section">
+        <div class="section-header">
+            <h2>Enrolled Students ({{ roster|length }})</h2>
+        </div>
+
+        {% if roster %}
+            <div class="table-responsive">
+                <table class="roster-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Email</th>
+                            <th>Completed</th>
+                            <th>Avg Grade</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in roster %}
+                            <tr>
+                                <td class="student-name-cell">
+                                    <strong>{{ student.student_name }}</strong>
+                                </td>
+                                <td class="student-email-cell">{{ student.student_email }}</td>
+                                <td>
+                                    <span class="completion-pill">
+                                        {{ student.completed_count }} / {{ total_assignments }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if student.avg_grade is not none %}
+                                        <strong class="text-cream">{{ student.avg_grade }}</strong>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form
+                                        action="/admin/classes/{{ target_class.id }}/unenroll/{{ student.student_id }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Remove {{ student.student_name }} from this class?');"
+                                    >
+                                        <button type="submit" class="btn btn-danger-ghost btn-xs">
+                                            Remove
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="dashboard-empty-card">
+                <p>No students enrolled yet. Add students using the email form above.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

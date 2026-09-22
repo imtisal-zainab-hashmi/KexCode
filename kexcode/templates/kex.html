@@ -1,0 +1,374 @@
+{% extends "layout.html" %}
+
+{% block title %}Kex Editor{% endblock %}
+
+{% block main %}
+<div class="page-header editor-page-header">
+    <div>
+        <h1>Kex Editor</h1>
+        <p class="editor-subtitle">
+            Check syntax and common code issues without running your program.
+        </p>
+    </div>
+
+    <div class="editor-controls">
+        <select id="language-select" aria-label="Choose a language">
+            <option value="python">Python</option>
+            <option value="javascript">JavaScript</option>
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+        </select>
+
+        <button type="button" id="check-btn">Check Code</button>
+        <button type="button" id="clear-btn" class="secondary-btn">Clear</button>
+    </div>
+</div>
+
+<div class="kex-workspace">
+    <section class="kex-editor-panel">
+        <div class="editor-panel-header">
+            <span id="file-name">main.py</span>
+            <span class="safe-check-label">Safe checker · code is not run</span>
+        </div>
+        <div id="monaco-editor"></div>
+    </section>
+
+    <section class="kex-output-panel">
+        <div class="output-header">
+            <span>Problems</span>
+            <span id="problem-status" class="problem-status">Ready</span>
+        </div>
+
+        <pre id="output-content">Write code, then select “Check Code.”</pre>
+    </section>
+</div>
+
+<!-- Monaco: the actual editor -->
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+
+<!-- Pyodide: used only to parse Python syntax in the student's own browser -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
+
+<script>
+    let editor = null;
+    let pyodide = null;
+    let pyodideLoading = null;
+
+    const checkButton = document.getElementById("check-btn");
+    const clearButton = document.getElementById("clear-btn");
+    const outputElement = document.getElementById("output-content");
+    const languageSelect = document.getElementById("language-select");
+    const fileName = document.getElementById("file-name");
+    const problemStatus = document.getElementById("problem-status");
+
+    const starterCode = {
+        python: `print("Hello from Kex!")`,
+        javascript: `console.log("Hello from Kex!");`,
+        html: `<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello from Kex</title>
+</head>
+<body>
+    <h1>Hello from Kex!</h1>
+</body>
+</html>`,
+        css: `body {
+    background: #ffffff;
+    color: #111827;
+}`
+    };
+
+    const fileNames = {
+        python: "main.py",
+        javascript: "main.js",
+        html: "index.html",
+        css: "styles.css"
+    };
+
+    require.config({
+        paths: {
+            vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs"
+        }
+    });
+
+    require(["vs/editor/editor.main"], function () {
+        editor = monaco.editor.create(document.getElementById("monaco-editor"), {
+            value: starterCode.python,
+            language: "python",
+            theme: "vs-dark",
+            automaticLayout: true,
+            fontSize: 14,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            padding: { top: 12, bottom: 12 },
+            wordWrap: "on"
+        });
+    });
+
+    languageSelect.addEventListener("change", function () {
+        if (!editor) return;
+
+        const language = this.value;
+        monaco.editor.setModelLanguage(editor.getModel(), language);
+        editor.setValue(starterCode[language]);
+        fileName.textContent = fileNames[language];
+
+        outputElement.textContent = "Language changed to " + this.options[this.selectedIndex].text + ". Check your code when you are ready.";
+        problemStatus.textContent = "Ready";
+        problemStatus.className = "problem-status";
+    });
+
+    clearButton.addEventListener("click", function () {
+        if (!editor) return;
+
+        editor.setValue("");
+        outputElement.textContent = "Editor cleared.";
+        problemStatus.textContent = "Ready";
+        problemStatus.className = "problem-status";
+        editor.focus();
+    });
+
+    checkButton.addEventListener("click", async function () {
+        if (!editor) {
+            showResult("The editor is still loading. Please wait a moment and try again.", false);
+            return;
+        }
+
+        const code = editor.getValue();
+        const language = languageSelect.value;
+
+        if (!code.trim()) {
+            showResult("Write some code before checking it.", false);
+            return;
+        }
+
+        checkButton.disabled = true;
+        checkButton.textContent = "Checking...";
+        outputElement.textContent = "Checking code safely in your browser...";
+        problemStatus.textContent = "Checking";
+        problemStatus.className = "problem-status checking";
+
+        try {
+            let result;
+
+            if (language === "python") {
+                result = await checkPython(code);
+            } else if (language === "javascript") {
+                result = checkJavaScript(code);
+            } else if (language === "html") {
+                result = checkHtml(code);
+            } else if (language === "css") {
+                result = checkCss(code);
+            }
+
+            showResult(result.message, result.valid);
+        } catch (error) {
+            console.error("Checker error:", error);
+            showResult("Checker error: " + error.message, false);
+        } finally {
+            checkButton.disabled = false;
+            checkButton.textContent = "Check Code";
+        }
+    });
+
+    function showResult(message, valid) {
+        outputElement.textContent = message;
+
+        if (valid) {
+            problemStatus.textContent = "No syntax errors found";
+            problemStatus.className = "problem-status success";
+        } else {
+            problemStatus.textContent = "Issues found";
+            problemStatus.className = "problem-status error";
+        }
+    }
+
+    async function getPyodide() {
+        if (pyodide) return pyodide;
+
+        if (!pyodideLoading) {
+            pyodideLoading = loadPyodide();
+        }
+
+        pyodide = await pyodideLoading;
+        return pyodide;
+    }
+
+    async function checkPython(code) {
+        try {
+            const python = await getPyodide();
+
+            /*
+              This only compiles/parses the student's text to find syntax errors.
+              It does NOT run their Python program.
+            */
+            const safeCode = JSON.stringify(code);
+            await python.runPythonAsync(
+                `compile(${safeCode}, "main.py", "exec")`
+            );
+
+            return {
+                valid: true,
+                message:
+                    "✓ Python syntax looks valid.\n\n" +
+                    "KexCode did not run your program. This check cannot find runtime errors, such as division by zero or using a variable that has not been created yet."
+            };
+        } catch (error) {
+            return {
+                valid: false,
+                message:
+                    "Python syntax issue:\n\n" +
+                    cleanPythonError(error.message) +
+                    "\n\nTip: Check colons (:), indentation, brackets, quotation marks, and spelling."
+            };
+        }
+    }
+
+    function cleanPythonError(message) {
+        return message
+            .replace(/^PythonError:\s*/i, "")
+            .replace(/File "main\.py", /g, "");
+    }
+
+    function checkJavaScript(code) {
+        try {
+            /*
+              new Function parses the code but does not call it.
+              The student's JavaScript is not executed.
+            */
+            new Function('"use strict";\n' + code);
+
+            return {
+                valid: true,
+                message:
+                    "✓ JavaScript syntax looks valid.\n\n" +
+                    "KexCode did not run your program. Check the Problems panel in the editor too, as it may show extra JavaScript warnings."
+            };
+        } catch (error) {
+            return {
+                valid: false,
+                message:
+                    "JavaScript syntax issue:\n\n" +
+                    error.message +
+                    "\n\nTip: Check brackets, commas, quotes, and semicolons."
+            };
+        }
+    }
+
+    function checkHtml(code) {
+        const errors = [];
+        const voidTags = new Set([
+            "area", "base", "br", "col", "embed", "hr",
+            "img", "input", "link", "meta", "param",
+            "source", "track", "wbr"
+        ]);
+
+        const tagPattern = /<\/?([a-zA-Z][\w-]*)(?:\s[^>]*)?>/g;
+        const tagStack = [];
+        let match;
+
+        while ((match = tagPattern.exec(code)) !== null) {
+            const wholeTag = match[0];
+            const tagName = match[1].toLowerCase();
+            const line = code.slice(0, match.index).split("\n").length;
+
+            if (wholeTag.startsWith("</")) {
+                const lastTag = tagStack.pop();
+
+                if (!lastTag) {
+                    errors.push(`Line ${line}: Closing </${tagName}> has no matching opening tag.`);
+                } else if (lastTag.name !== tagName) {
+                    errors.push(
+                        `Line ${line}: Found </${tagName}>, but <${lastTag.name}> from line ${lastTag.line} has not been closed.`
+                    );
+                }
+            } else if (!voidTags.has(tagName) && !wholeTag.endsWith("/>")) {
+                tagStack.push({ name: tagName, line: line });
+            }
+        }
+
+        tagStack.reverse().forEach(tag => {
+            errors.push(`Line ${tag.line}: Opening <${tag.name}> does not have a closing </${tag.name}> tag.`);
+        });
+
+        if (!/<html[\s>]/i.test(code)) {
+            errors.push("Suggestion: Add an <html> element around your page.");
+        }
+
+        if (!/<body[\s>]/i.test(code)) {
+            errors.push("Suggestion: Add a <body> element for visible page content.");
+        }
+
+        const realErrors = errors.filter(item => !item.startsWith("Suggestion:"));
+
+        if (realErrors.length) {
+            return {
+                valid: false,
+                message: "HTML issue" + (realErrors.length > 1 ? "s" : "") + ":\n\n• " + errors.join("\n• ")
+            };
+        }
+
+        return {
+            valid: true,
+            message:
+                "✓ No unclosed or incorrectly nested HTML tags were found." +
+                (errors.length ? "\n\n• " + errors.join("\n• ") : "") +
+                "\n\nHTML is forgiving, so this is a basic structural check rather than a full browser preview."
+        };
+    }
+
+    function checkCss(code) {
+        const errors = [];
+        const lines = code.split("\n");
+        let braces = 0;
+
+        for (let index = 0; index < lines.length; index++) {
+            const line = lines[index];
+            const lineNumber = index + 1;
+
+            for (const character of line) {
+                if (character === "{") braces++;
+                if (character === "}") braces--;
+
+                if (braces < 0) {
+                    errors.push(`Line ${lineNumber}: Found a closing } without a matching opening {.`);
+                    braces = 0;
+                }
+            }
+
+            const trimmed = line.trim();
+
+            if (
+                trimmed &&
+                !trimmed.startsWith("/*") &&
+                !trimmed.startsWith("*") &&
+                !trimmed.endsWith("{") &&
+                !trimmed.endsWith("}") &&
+                !trimmed.endsWith(";") &&
+                !trimmed.endsWith("*/")
+            ) {
+                errors.push(`Line ${lineNumber}: This CSS line may be missing a semicolon (;).`);
+            }
+        }
+
+        if (braces > 0) {
+            errors.push("Your CSS has an opening { without a matching closing }.");
+        }
+
+        if (errors.length) {
+            return {
+                valid: false,
+                message: "CSS issue" + (errors.length > 1 ? "s" : "") + ":\n\n• " + errors.join("\n• ")
+            };
+        }
+
+        return {
+            valid: true,
+            message:
+                "✓ CSS structure looks valid.\n\n" +
+                "This checks braces and common missing semicolons. It does not test whether every CSS property has the effect you expect."
+        };
+    }
+</script>
+{% endblock %}

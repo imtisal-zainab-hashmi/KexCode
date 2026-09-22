@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+
+{% block title %}Class Leaderboard & Streaks | Admin{% endblock %}
+
+{% block main %}
+<div class="leaderboard-page">
+
+    <section class="leaderboard-header">
+        <div>
+            <p class="assignment-class">Instructor View</p>
+            <h1>Class Leaderboard & Streaks</h1>
+            <p class="muted-text">Monitor student engagement, completion consistency, and academic momentum.</p>
+        </div>
+
+        {% if classes %}
+        <form method="get" action="/admin/leaderboard" class="class-filter-form">
+            <select name="class_id" onchange="this.form.submit()" class="leaderboard-select">
+                <option value="">All Classes</option>
+                {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class == c.id %}selected{% endif %}>
+                        {{ c.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+        {% endif %}
+    </section>
+
+    <section class="leaderboard-table-card">
+        <div class="section-title-row">
+            <h2>Student Roster Rankings</h2>
+            <span>{{ leaderboard | length }} students monitored</span>
+        </div>
+
+        {% if leaderboard %}
+        <div class="table-responsive">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Rank</th>
+                        <th>Student</th>
+                        <th>Class</th>
+                        <th>Current Streak</th>
+                        <th>Assignments Done</th>
+                        <th>Avg Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in leaderboard %}
+                    <tr>
+                        <td class="rank-col">
+                            {% if row.rank == 1 %}
+                                <span class="medal-badge gold">1</span>
+                            {% elif row.rank == 2 %}
+                                <span class="medal-badge silver">2</span>
+                            {% elif row.rank == 3 %}
+                                <span class="medal-badge bronze">3</span>
+                            {% else %}
+                                #{{ row.rank }}
+                            {% endif %}
+                        </td>
+                        <td class="student-name-col">
+                            <strong>{{ row.student_name }}</strong>
+                            <small class="student-email">{{ row.student_email }}</small>
+                        </td>
+                        <td>{{ row.class_name }}</td>
+                        <td>
+                            {% if row.streak > 0 %}
+                                <span class="streak-chip">🔥 {{ row.streak }} streak</span>
+                            {% else %}
+                                <span class="muted-text">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ row.completed_count }}</strong>
+                        </td>
+                        <td>
+                            {% if row.avg_grade is not none %}
+                                <strong>{{ row.avg_grade }}</strong>
+                            {% else %}
+                                <span class="muted-text">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-history">
+            <p class="assignment-class">No records found</p>
+            <h2>No student submissions yet for this selection.</h2>
+        </div>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block title %}Lecture Notes - KexCode{% endblock %}
+
+{% block main %}
+<div class="container">
+    <div class="page-header">
+        <span class="dashboard-tag">STUDENT PORTAL</span>
+        <h1 class="page-title">Lecture Notes</h1>
+        <p class="text-muted">Click any lecture to view full materials, study guides, or export to PDF.</p>
+    </div>
+
+    {% if notes %}
+    <div class="lecture-list-grid">
+        {% for n in notes %}
+        <a href="/note/{{ n.id }}" class="lecture-preview-card">
+            <div class="lecture-card-meta">
+                <span class="lecture-class-pill">{{ n.class_name }}</span>
+                <span class="lecture-card-date">{{ n.created_at }}</span>
+            </div>
+
+            <h2 class="lecture-card-title">{{ n.title }}</h2>
+
+            <div class="lecture-card-footer">
+                <span class="read-more-link">
+                    Read Lecture
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state-card">
+        No lecture notes have been published yet for your enrolled classes.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

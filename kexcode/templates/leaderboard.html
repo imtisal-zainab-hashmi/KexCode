@@ -1,0 +1,127 @@
+{% extends "layout.html" %}
+
+{% block title %}Club Leaderboard & Streaks | KexCode{% endblock %}
+
+{% block main %}
+<div class="leaderboard-page">
+
+    <section class="leaderboard-header">
+        <div>
+            <p class="assignment-class">Coding Club</p>
+            <h1>Leaderboard & Streaks</h1>
+            <p class="muted-text">Celebrate consistency, problem-solving, and friendly club competition.</p>
+        </div>
+
+        {% if classes | length > 1 %}
+        <form method="get" action="/leaderboard" class="class-filter-form">
+            <select name="class_id" onchange="this.form.submit()" class="leaderboard-select">
+                <option value="">All My Classes</option>
+                {% for c in classes %}
+                    <option value="{{ c.id }}" {% if selected_class == c.id %}selected{% endif %}>
+                        {{ c.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+        {% endif %}
+    </section>
+
+    <!-- Highlights Row -->
+    <section class="spotlight-row">
+        {% if streak_champion and streak_champion.streak > 0 %}
+        <div class="spotlight-card">
+            <span class="spotlight-badge">🔥 Streak Leader</span>
+            <h3>{{ streak_champion.student_name }}</h3>
+            <p>{{ streak_champion.streak }} assignments completed in a row</p>
+        </div>
+        {% endif %}
+
+        {% if top_performer and top_performer.avg_grade %}
+        <div class="spotlight-card">
+            <span class="spotlight-badge">⭐ Top Grade</span>
+            <h3>{{ top_performer.student_name }}</h3>
+            <p>Average grade: <strong>{{ top_performer.avg_grade }}</strong></p>
+        </div>
+        {% endif %}
+
+        {% if current_student %}
+        <div class="spotlight-card my-stats-card">
+            <span class="spotlight-badge">Your Standing</span>
+            <h3>Rank #{{ user_rank }}</h3>
+            <p>{{ current_student.streak }} completed · Streak active 🔥</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Rankings Table -->
+    <section class="leaderboard-table-card">
+        <div class="section-title-row">
+            <h2>Club Rankings</h2>
+            <span>{{ leaderboard | length }} students</span>
+        </div>
+
+        {% if leaderboard %}
+        <div class="table-responsive">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Rank</th>
+                        <th>Student</th>
+                        <th>Streak</th>
+                        <th>Completed</th>
+                        <th>Avg Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in leaderboard %}
+                    <tr class="{% if row.student_id == session.user_id %}current-user-row{% endif %}">
+                        <td class="rank-col">
+                            {% if row.rank == 1 %}
+                                <span class="medal-badge gold">1</span>
+                            {% elif row.rank == 2 %}
+                                <span class="medal-badge silver">2</span>
+                            {% elif row.rank == 3 %}
+                                <span class="medal-badge bronze">3</span>
+                            {% else %}
+                                #{{ row.rank }}
+                            {% endif %}
+                        </td>
+                        <td class="student-name-col">
+                            <strong>{{ row.student_name }}</strong>
+                            {% if row.student_id == session.user_id %}
+                                <span class="you-tag">You</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.streak > 0 %}
+                                <span class="streak-chip">🔥 {{ row.streak }} in a row</span>
+                            {% else %}
+                                <span class="muted-text">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ row.completed_count }}</strong>
+                        </td>
+                        <td>
+                            {% if row.avg_grade is not none %}
+                                <strong>{{ row.avg_grade }}</strong>
+                            {% else %}
+                                <span class="muted-text">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-history">
+            <p class="assignment-class">No club activity yet</p>
+            <h2>Leaderboard will update as students submit assignments.</h2>
+            <p>Complete your first assignment to climb the ranks!</p>
+        </div>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block title %}Verify email{% endblock %}
+
+{% block main %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <h1>Check your email</h1>
+        <p style="text-align:center; margin-bottom: 28px;">
+            We sent a 6-digit code to your email.<br>
+            Enter it below to continue.
+        </p>
+
+        <form action="/verify" method="post" class="stacked-form">
+            <input autocomplete="off" autofocus name="code"
+                   placeholder="• • • • • •" type="text"
+                   maxlength="6" required
+                   style="text-align:center; letter-spacing: 8px; font-size: 20px; font-weight: 600;">
+            <button type="submit">Verify Account</button>
+        </form>
+
+        <p style="text-align:center; margin-top: 18px; font-size: 14px;">
+            Didn’t get the code? <a href="/verify/resend">Resend</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,5 @@
+cs50
+flask
+flask-session
+requests
+python-dotenv

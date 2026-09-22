@@ -1,0 +1,133 @@
+{% extends "layout.html" %}
+
+{% block title %}Activity{% endblock %}
+
+{% block main %}
+<div class="student-dashboard activity-page">
+
+    <section class="student-welcome">
+        <div>
+            <p class="eyebrow">STUDENT SPACE</p>
+            <h1>Activity</h1>
+            <p class="welcome-message">
+                Review your class progress, submissions, grades, and achievements.
+            </p>
+        </div>
+
+        <a class="dashboard-editor-link" href="/dashboard">
+            Back to Dashboard →
+        </a>
+    </section>
+
+    <div class="dashboard-two-column">
+        <!-- Class progress -->
+        <section class="dashboard-section dashboard-panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">YOUR CLASSES</p>
+                    <h2>Class progress</h2>
+                </div>
+            </div>
+
+            {% if class_progress %}
+            <div class="class-progress-list">
+                {% for class_item in class_progress %}
+                <article class="class-progress-item">
+                    <div class="class-progress-top">
+                        <div>
+                            <h3>{{ class_item.name }}</h3>
+                            <p>
+                                {{ class_item.submitted }} of
+                                {{ class_item.total }} assignments submitted
+                            </p>
+                        </div>
+
+                        <strong>{{ class_item.progress }}%</strong>
+                    </div>
+
+                    <div class="progress-bar small-progress">
+                        <div
+                            class="progress-bar-fill"
+                            style="width: {{ class_item.progress }}%;"
+                        ></div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="muted-text">You are not enrolled in a class yet.</p>
+            {% endif %}
+        </section>
+
+        <!-- Recent activity -->
+        <section class="dashboard-section dashboard-panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">YOUR ACTIVITY</p>
+                    <h2>Recent activity</h2>
+                </div>
+            </div>
+
+            {% if recent_activity %}
+            <div class="activity-list">
+                {% for item in recent_activity %}
+                <a class="activity-item" href="/assignment/{{ item.assignment_id }}">
+                    <span class="activity-marker"></span>
+
+                    <span>
+                        <strong>{{ item.title }}</strong>
+                        <small>
+                            Submitted for {{ item.class_name }}
+                            {% if item.submitted_at %}
+                                · {{ item.submitted_at }}
+                            {% endif %}
+                        </small>
+                    </span>
+
+                    {% if item.grade is not none %}
+                    <span class="activity-grade">{{ item.grade }}</span>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="small-empty-state">
+                <p>Your submissions and progress will appear here.</p>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <!-- Achievements -->
+    <section class="dashboard-section">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">ACHIEVEMENTS</p>
+                <h2>Your badges</h2>
+            </div>
+        </div>
+
+        {% if badges %}
+        <div class="badge-grid">
+            {% for badge in badges %}
+            <article class="achievement-card">
+                <span class="achievement-marker"></span>
+                <div>
+                    <h3>{{ badge.title }}</h3>
+                    <p>{{ badge.description }}</p>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="dashboard-empty-state">
+            <div>
+                <h3>Your first badge is waiting.</h3>
+                <p>Submit an assignment to begin collecting achievements.</p>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

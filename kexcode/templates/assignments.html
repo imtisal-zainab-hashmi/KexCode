@@ -1,0 +1,154 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    My Assignments | KexCode
+{% endblock %}
+
+{% block main %}
+<div class="assignments-page">
+
+    <section class="assignments-heading">
+        <div>
+            <p class="page-eyebrow">Student workspace</p>
+            <h1>My Assignments</h1>
+            <p>Keep track of drafts, submissions, grades, and deadlines.</p>
+        </div>
+    </section>
+
+    <section class="assignment-filters" aria-label="Assignment filters">
+        <div class="filter-group">
+            <label for="class-filter">Class</label>
+            <select id="class-filter">
+                <option value="all">All classes</option>
+
+                {% for assignment in assignments %}
+                    <option value="class-{{ assignment.class_id }}">
+                        {{ assignment.class_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="status-filter">Status</label>
+            <select id="status-filter">
+                <option value="all">All statuses</option>
+                <option value="todo">To do</option>
+                <option value="draft">Draft saved</option>
+                <option value="submitted">Submitted</option>
+                <option value="graded">Graded</option>
+                <option value="overdue">Overdue</option>
+            </select>
+        </div>
+    </section>
+
+    <section class="assignments-list" id="assignments-list">
+        {% for assignment in assignments %}
+            <article
+                class="assignment-list-card"
+                data-class="class-{{ assignment.class_id }}"
+                data-status="{{ assignment.status }}"
+            >
+                <div class="assignment-list-main">
+                    <div class="assignment-list-meta">
+                        <span>{{ assignment.class_name }}</span>
+                        <span class="assignment-status {{ assignment.status }}">
+                            {{ assignment.status_label }}
+                        </span>
+                    </div>
+
+                    <h2>{{ assignment.title }}</h2>
+
+                    {% if assignment.description %}
+                        <p class="assignment-list-description">
+                            {{ assignment.description }}
+                        </p>
+                    {% endif %}
+
+                    <p class="assignment-list-due">
+                        Due: {{ assignment.due_display }}
+                    </p>
+
+                    {% if assignment.status == "draft" %}
+                        <p class="assignment-list-detail">
+                            Last saved: {{ assignment.draft_updated_at }}
+                        </p>
+                    {% elif assignment.status == "submitted" %}
+                        <p class="assignment-list-detail">
+                            Submitted: {{ assignment.submitted_at }}
+                        </p>
+                    {% elif assignment.status == "graded" %}
+                        <p class="assignment-list-detail">
+                            Grade: {{ assignment.grade }}
+
+                            {% if assignment.feedback %}
+                                · Feedback available
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                </div>
+
+                <div class="assignment-list-action">
+                    <a href="/assignment/{{ assignment.id }}">
+                        {% if assignment.status == "todo" %}
+                            Start assignment
+                        {% elif assignment.status == "draft" %}
+                            Continue draft
+                        {% elif assignment.status == "overdue" %}
+                            View assignment
+                        {% else %}
+                            View submission
+                        {% endif %}
+                    </a>
+                </div>
+            </article>
+        {% else %}
+            <div class="assignment-empty">
+                <h2>No assignments yet</h2>
+                <p>Your instructor has not posted an assignment for your classes yet.</p>
+            </div>
+        {% endfor %}
+    </section>
+
+    <div id="no-filter-results" class="assignment-empty" hidden>
+        <h2>No matching assignments</h2>
+        <p>Try choosing a different class or status.</p>
+    </div>
+</div>
+
+<script>
+    const classFilter = document.getElementById("class-filter");
+    const statusFilter = document.getElementById("status-filter");
+    const assignmentCards = document.querySelectorAll(".assignment-list-card");
+    const noResults = document.getElementById("no-filter-results");
+
+    function filterAssignments() {
+        const selectedClass = classFilter.value;
+        const selectedStatus = statusFilter.value;
+        let visibleCount = 0;
+
+        assignmentCards.forEach((card) => {
+            const classMatches =
+                selectedClass === "all" ||
+                card.dataset.class === selectedClass;
+
+            const statusMatches =
+                selectedStatus === "all" ||
+                card.dataset.status === selectedStatus;
+
+            const visible = classMatches && statusMatches;
+
+            card.hidden = !visible;
+
+            if (visible) {
+                visibleCount += 1;
+            }
+        });
+
+        noResults.hidden = visibleCount !== 0;
+    }
+
+    classFilter.addEventListener("change", filterAssignments);
+    statusFilter.addEventListener("change", filterAssignments);
+</script>
+{% endblock %}

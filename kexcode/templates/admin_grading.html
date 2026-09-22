@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+
+{% block title %}Grading: {{ assignment.title }} | KexCode{% endblock %}
+
+{% block main %}
+<div class="admin-page grading-page">
+    <div class="grading-top-nav">
+        <a href="/admin/assignments" class="back-link">
+            ← Back to Assignments
+        </a>
+    </div>
+
+    <div class="grading-assignment-header">
+        <div class="header-badges">
+            <span class="tag-badge">{{ assignment.class_name }}</span>
+            <span class="lang-badge">{{ assignment.language or 'python' }}</span>
+            {% if assignment.due_date %}
+                <span class="due-badge">Due: {{ assignment.due_date }}</span>
+            {% endif %}
+        </div>
+        <h1>{{ assignment.title }}</h1>
+        {% if assignment.description %}
+            <p class="assignment-desc-lead">{{ assignment.description }}</p>
+        {% endif %}
+    </div>
+
+    <section class="submissions-section">
+        <div class="section-title-row">
+            <h2>Student Submissions</h2>
+            <span class="count-pill">{{ submissions|length }} submitted</span>
+        </div>
+
+        {% if submissions %}
+            <div class="submissions-list">
+                {% for sub in submissions %}
+                    <div class="submission-review-card">
+                        <div class="submission-card-header">
+                            <div class="student-meta">
+                                <strong>{{ sub.student_name }}</strong>
+                                <span class="student-email">{{ sub.student_email }}</span>
+                            </div>
+                            <div class="timing-meta">
+                                <span class="timing-badge timing-{{ sub.timing_status }}">{{ sub.timing_label }}</span>
+                                <span class="sub-date">{{ sub.submitted_display }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Code Viewer (Collapsible) -->
+                        <details class="code-details" open>
+                            <summary class="code-summary">
+                                <span>Submitted Code</span>
+                                <span class="summary-hint">Click to toggle code view</span>
+                            </summary>
+                            <div class="code-viewer-wrap">
+                                <pre><code>{{ sub.code }}</code></pre>
+                            </div>
+                        </details>
+
+                        <!-- Grading & Feedback Form -->
+                        <form action="/admin/grading/{{ assignment.id }}" method="post" class="inline-grade-form">
+                            <input type="hidden" name="submission_id" value="{{ sub.id }}">
+
+                            <div class="grade-form-grid">
+                                <div class="grade-input-group">
+                                    <label for="grade-{{ sub.id }}">Grade / Score</label>
+                                    <input
+                                        id="grade-{{ sub.id }}"
+                                        type="text"
+                                        name="grade"
+                                        value="{{ sub.grade or '' }}"
+                                        placeholder="e.g. 95/100 or A"
+                                    >
+                                </div>
+
+                                <div class="feedback-input-group">
+                                    <label for="feedback-{{ sub.id }}">Instructor Feedback</label>
+                                    <textarea
+                                        id="feedback-{{ sub.id }}"
+                                        name="feedback"
+                                        rows="2"
+                                        placeholder="Add constructive notes or hints for this student..."
+                                    >{{ sub.feedback or '' }}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="grade-submit-row">
+                                {% if sub.grade %}
+                                    <span class="graded-indicator">✓ Graded ({{ sub.grade }})</span>
+                                {% else %}
+                                    <span class="pending-indicator">Pending grade</span>
+                                {% endif %}
+                                <button type="submit" class="button button-small">Save Grade</button>
+                            </div>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state-box">
+                <p>No students have submitted this assignment yet.</p>
+                <small>Once enrolled students submit their work from their portal, their code and submissions will appear here automatically.</small>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ note.title }} | Lecture{% endblock %}
+
+{% block main %}
+<div class="note-detail-page">
+    <div class="note-detail-header" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <a href="/notes" class="back-link" style="color: #f7f4ea; text-decoration: none; font-size: 0.9rem;">&larr; Back to Lectures</a>
+        <span class="tag-badge">{{ note.class_name }}</span>
+    </div>
+
+    <article class="card note-card-full" style="background: #111; border: 1px solid #282828; border-radius: 8px; padding: 2rem;">
+        <header class="note-header-full" style="border-bottom: 1px solid #222; padding-bottom: 1.25rem; margin-bottom: 1.5rem;">
+            <h1 class="page-title" style="color: #f7f4ea; margin-bottom: 0.4rem;">{{ note.title }}</h1>
+            <p class="note-meta" style="color: #888; font-size: 0.85rem; margin: 0;">Published on {{ note.created_at }}</p>
+        </header>
+
+        {% if note.pdf_filename %}
+        <div class="pdf-attachment-banner" style="display: flex; justify-content: space-between; align-items: center; background: #181818; border: 1px solid #333; border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 1.6rem;">📄</span>
+                <div>
+                    <strong style="color: #f7f4ea; display: block; font-size: 0.95rem;">Lecture PDF Attached</strong>
+                    <span style="color: #888; font-size: 0.82rem;">Slides / document uploaded by instructor</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.6rem;">
+                <a
+                    href="{{ url_for('static', filename='uploads/lectures/' ~ note.pdf_filename) }}"
+                    target="_blank"
+                    class="btn btn-secondary"
+                    style="background: #252525; color: #f7f4ea; border: 1px solid #444; padding: 0.45rem 0.9rem; border-radius: 4px; text-decoration: none; font-size: 0.85rem;"
+                >
+                    View in Browser
+                </a>
+                <a
+                    href="{{ url_for('static', filename='uploads/lectures/' ~ note.pdf_filename) }}"
+                    download
+                    class="btn btn-primary"
+                    style="background: #f7f4ea; color: #111; border: none; padding: 0.45rem 0.9rem; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600;"
+                >
+                    Download PDF
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="note-body-content" style="white-space: pre-wrap; color: #ddd; line-height: 1.65; font-size: 0.95rem;">
+{{ note.content }}
+        </div>
+    </article>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block body_class %}auth-page{% endblock %}
+
+{% block title %}Register{% endblock %}
+
+{% block main %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <h1>Create Account</h1>
+        <p style="text-align:center; margin-bottom: 28px;">
+            Join as a student or teacher
+        </p>
+
+        <form action="/register" method="post" class="stacked-form">
+            <input autocomplete="off" autofocus name="name" placeholder="Full name" type="text" required>
+            <input name="email" placeholder="Email address" type="email" required>
+            <input name="password" placeholder="Password" type="password" required>
+            <input name="confirmation" placeholder="Confirm password" type="password" required>
+
+ <div class="role-select">
+    <label class="role-option">
+        <input type="radio" name="role" value="student" checked>
+        <div class="role-card">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 10L12 5 2 10l10 5 10-5z"/>
+                <path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/>
+            </svg>
+            <span>Student</span>
+        </div>
+    </label>
+    <label class="role-option">
+        <input type="radio" name="role" value="admin">
+        <div class="role-card">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+            <span>Admin / Teacher</span>
+        </div>
+    </label>
+</div>
+
+            <button type="submit">Create Account</button>
+        </form>
+
+        <p style="text-align:center; margin-top: 22px; font-size: 14px;">
+            Already have an account? <a href="/login">Log in</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+
+{% block title %}Manage Classes{% endblock %}
+
+{% block main %}
+<div class="admin-classes-page">
+    <header class="page-header">
+        <div>
+            <p class="dashboard-tag">INSTRUCTOR PORTAL</p>
+            <h1 class="page-title">Classes</h1>
+            <p class="page-subtitle">Create and manage club sections, cohorts, and student rosters.</p>
+        </div>
+    </header>
+
+    <!-- Create Class Form -->
+    <div class="card create-class-card">
+        <h3>Create New Class</h3>
+        <form action="/admin/classes" method="POST" class="create-class-form">
+            <div class="form-group inline-group">
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="e.g. Intro to Python (Fall 2026)"
+                    required
+                    autocomplete="off"
+                    class="form-control"
+                >
+                <button type="submit" class="btn btn-primary">+ Create Class</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Classes List Grid -->
+    <section class="classes-grid-section">
+        <div class="section-header">
+            <h2>Your Classes ({{ classes|length }})</h2>
+        </div>
+
+        {% if classes %}
+            <div class="classes-card-grid">
+                {% for c in classes %}
+                    <div class="class-summary-card">
+                        <div class="class-card-top">
+                            <span class="class-id-badge">CLASS ID #{{ c.id }}</span>
+                            <h3 class="class-title">{{ c.name }}</h3>
+                        </div>
+
+                        <div class="class-card-stats">
+                            <div class="stat-item">
+                                <span class="stat-number">{{ c.student_count }}</span>
+                                <span class="stat-desc">Student{{ '' if c.student_count == 1 else 's' }}</span>
+                            </div>
+                            <div class="stat-divider"></div>
+                            <div class="stat-item">
+                                <span class="stat-number">{{ c.assignment_count }}</span>
+                                <span class="stat-desc">Assignment{{ '' if c.assignment_count == 1 else 's' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="class-card-actions">
+                            <a href="/admin/classes/{{ c.id }}" class="btn btn-primary btn-sm">
+                                Manage Roster &rarr;
+                            </a>
+                            <a href="/admin/classes/{{ c.id }}/export-csv" class="card-link" style="margin-left: 0.75rem;">
+    Export CSV
+</a>
+
+                            <form
+                                action="/admin/classes/{{ c.id }}/delete"
+                                method="POST"
+                                onsubmit="return confirm('Delete this class? All assignments and enrollments in it will be permanently removed.');"
+                            >
+                                <button type="submit" class="btn btn-danger-ghost btn-sm" title="Delete Class">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="dashboard-empty-card">
+                <p>No classes created yet. Use the form above to add your first coding cohort.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

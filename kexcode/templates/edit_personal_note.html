@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Note{% endblock %}
+
+{% block main %}
+<div class="personal-notes-page">
+
+    <a href="/my-notes" class="back-link">← Back to My Notes</a>
+
+    <section class="create-note-card">
+        <p class="assignment-class">Private note</p>
+        <h1>Edit note</h1>
+
+        <form action="/my-notes/{{ note.id }}" method="post" class="personal-note-form">
+            <label for="title">Title</label>
+            <input
+                id="title"
+                type="text"
+                name="title"
+                maxlength="120"
+                value="{{ note.title }}"
+                required
+            >
+
+            <label for="content">Your note</label>
+            <textarea
+                id="content"
+                name="content"
+                rows="14"
+                required
+            >{{ note.content }}</textarea>
+
+            <div class="note-form-actions">
+                <a href="/my-notes" class="secondary-btn note-edit-link">
+                    Cancel
+                </a>
+
+                <button type="submit">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+
+{% block title %}My Notes{% endblock %}
+
+{% block main %}
+<div class="personal-notes-page">
+
+    <section class="notes-page-heading">
+        <div>
+            <p class="assignment-class">Private workspace</p>
+            <h1>My Notes</h1>
+            <p>Write study notes, reminders, explanations, and ideas. Only you can see these.</p>
+        </div>
+    </section>
+
+    <section class="create-note-card">
+        <h2>New note</h2>
+
+        <form action="/my-notes" method="post" class="personal-note-form">
+            <label for="title">Title</label>
+            <input
+                id="title"
+                type="text"
+                name="title"
+                maxlength="120"
+                placeholder="Example: Python loops revision"
+                required
+            >
+
+            <label for="content">Your note</label>
+            <textarea
+                id="content"
+                name="content"
+                rows="8"
+                placeholder="Write anything you want to remember..."
+                required
+            ></textarea>
+
+            <button type="submit">Save Note</button>
+        </form>
+    </section>
+
+    <section class="saved-notes-section">
+        <div class="section-title-row">
+            <h2>Saved notes</h2>
+            <span>{{ notes | length }} total</span>
+        </div>
+
+        {% if notes %}
+            <div class="personal-notes-grid">
+                {% for note in notes %}
+                    <article class="personal-note-card">
+                        <div class="personal-note-card-top">
+                            <div>
+                                <h3>{{ note.title }}</h3>
+                                <p>Updated {{ note.updated_at }}</p>
+                            </div>
+
+                            <form
+                                action="/my-notes/{{ note.id }}/delete"
+                                method="post"
+                                onsubmit="return confirm('Delete this note permanently?');"
+                            >
+                                <button type="submit" class="delete-note-btn">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+
+                        <p class="personal-note-preview">{{ note.content }}</p>
+
+                        <a href="/my-notes/{{ note.id }}" class="secondary-btn note-edit-link">
+                            Edit note
+                        </a>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-history">
+                <p class="assignment-class">No notes yet</p>
+                <h2>Your private study space is ready.</h2>
+                <p>Create your first note above.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

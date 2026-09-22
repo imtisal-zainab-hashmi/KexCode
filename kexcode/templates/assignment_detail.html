@@ -1,0 +1,489 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{ assignment.title }} | KexCode
+{% endblock %}
+
+{% block main %}
+<div class="assignment-page">
+
+    <a href="/assignments" class="back-link">← Back to assignments</a>
+
+    <section class="assignment-intro">
+        <p class="assignment-class">{{ assignment.class_name }}</p>
+        <h1>{{ assignment.title }}</h1>
+
+        {% if assignment.due_date %}
+            <p class="assignment-due">
+                Due: {{ assignment.due_date }}
+            </p>
+        {% endif %}
+
+        {% if assignment.description %}
+            <div class="assignment-description">
+                {{ assignment.description }}
+            </div>
+        {% endif %}
+    </section>
+
+    {% if submission %}
+        <section class="submission-notice">
+            <div>
+                <strong>Latest submission</strong>
+                <span>
+                    Submitted: {{ submission.submitted_at }}
+
+                    {% if submission.grade is not none %}
+                        · Grade: {{ submission.grade }}
+                    {% else %}
+                        · Awaiting grading
+                    {% endif %}
+                </span>
+            </div>
+
+            <a
+                href="/assignment/{{ assignment.id }}/submissions"
+                class="secondary-btn submission-history-link"
+            >
+                View History
+            </a>
+
+            {% if submission.feedback %}
+                <p>
+                    <strong>Instructor feedback:</strong>
+                    {{ submission.feedback }}
+                </p>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    <form
+        id="code-form"
+        action="/assignment/{{ assignment.id }}"
+        method="post"
+        class="assignment-editor-form"
+    >
+        <input type="hidden" name="code" id="code-input">
+
+        <div class="editor-toolbar">
+            <div class="editor-language-wrap">
+                <label for="language-select">Language</label>
+
+                <select id="language-select">
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                </select>
+            </div>
+
+            <div class="editor-actions">
+                <button type="button" id="check-code-btn" class="secondary-btn">
+                    Check Code
+                </button>
+
+                <button type="button" id="save-draft-btn" class="secondary-btn">
+                    Save Draft
+                </button>
+
+                {% if submission %}
+                    <a
+                        href="/assignment/{{ assignment.id }}/submissions"
+                        class="secondary-btn submission-history-link"
+                    >
+                        View History
+                    </a>
+                {% endif %}
+
+                <button type="submit" id="submit-btn">
+                    {% if submission %}
+                        Submit New Version
+                    {% else %}
+                        Submit Assignment
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+
+        <div id="draft-status" class="draft-status" aria-live="polite"></div>
+
+        <div class="assignment-editor">
+            <div id="monaco-editor"></div>
+        </div>
+    </form>
+
+    <section class="problems-panel">
+        <div class="problems-header">
+            Problems
+        </div>
+
+        <pre id="output-content">Write code, then choose Check Code.</pre>
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+
+<script>
+    const assignmentId = {{ assignment.id | tojson }};
+
+    const initialCode = {{
+        (
+            draft.code
+            if draft
+            else (
+                submission.code
+                if submission
+                else assignment.starter_code
+            )
+        ) | default("", true) | tojson
+    }};
+
+    const initialLanguage = {{
+        (draft.language if draft else "python") | default("python", true) | tojson
+    }};
+
+    const languageSelect = document.getElementById("language-select");
+    const codeInput = document.getElementById("code-input");
+    const codeForm = document.getElementById("code-form");
+    const saveDraftButton = document.getElementById("save-draft-btn");
+    const submitButton = document.getElementById("submit-btn");
+    const draftStatus = document.getElementById("draft-status");
+    const problemOutput = document.getElementById("output-content");
+    const checkCodeButton = document.getElementById("check-code-btn");
+
+    let editor = null;
+    let hasUnsavedChanges = false;
+    let isSavingDraft = false;
+
+    const AUTOSAVE_DELAY = 30000;
+
+    function setDraftStatus(message, type = "") {
+        draftStatus.textContent = message;
+        draftStatus.className = "draft-status";
+
+        if (type) {
+            draftStatus.classList.add(type);
+        }
+    }
+
+    function getEditorCode() {
+        return editor ? editor.getValue() : null;
+    }
+
+    async function saveDraft(isAutomatic = false) {
+        const code = getEditorCode();
+
+        if (code === null || isSavingDraft || !hasUnsavedChanges) {
+            return;
+        }
+
+        isSavingDraft = true;
+
+        if (!isAutomatic) {
+            saveDraftButton.disabled = true;
+            saveDraftButton.textContent = "Saving...";
+        }
+
+        setDraftStatus(isAutomatic ? "Autosaving..." : "Saving your draft...");
+
+        try {
+            const response = await fetch(`/assignment/${assignmentId}/draft`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    code: code,
+                    language: languageSelect.value
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Could not save the draft.");
+            }
+
+            hasUnsavedChanges = false;
+
+            const savedTime = new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+            setDraftStatus(
+                isAutomatic
+                    ? `Autosaved at ${savedTime}.`
+                    : `Draft saved at ${savedTime}.`,
+                "success"
+            );
+        } catch (error) {
+            console.error("Draft error:", error);
+            setDraftStatus(error.message || "Could not save your draft.", "error");
+        } finally {
+            isSavingDraft = false;
+            saveDraftButton.disabled = false;
+            saveDraftButton.textContent = "Save Draft";
+        }
+    }
+
+    function showProblems(messages, type = "info") {
+        problemOutput.textContent = messages.join("\n\n");
+        problemOutput.className = type;
+    }
+
+    function checkPython(code) {
+        const problems = [];
+        let parentheses = 0;
+        let brackets = 0;
+        let braces = 0;
+
+        code.split("\n").forEach((line, index) => {
+            const trimmed = line.trim();
+            const lineNumber = index + 1;
+
+            if (
+                (trimmed.startsWith("if ") ||
+                trimmed.startsWith("for ") ||
+                trimmed.startsWith("while ") ||
+                trimmed.startsWith("def ")) &&
+                !trimmed.endsWith(":")
+            ) {
+                problems.push(`Line ${lineNumber}: This Python statement may need a colon (:).`);
+            }
+
+            for (const character of line) {
+                if (character === "(") parentheses++;
+                if (character === ")") parentheses--;
+                if (character === "[") brackets++;
+                if (character === "]") brackets--;
+                if (character === "{") braces++;
+                if (character === "}") braces--;
+            }
+        });
+
+        if (parentheses !== 0) problems.push("Your parentheses () do not appear balanced.");
+        if (brackets !== 0) problems.push("Your square brackets [] do not appear balanced.");
+        if (braces !== 0) problems.push("Your curly brackets {} do not appear balanced.");
+
+        if (problems.length) {
+            showProblems(problems, "error");
+        } else {
+            showProblems(
+                [
+                    "No basic Python structure problems were found.",
+                    "Python is not run in the browser, so runtime results cannot be checked."
+                ],
+                "success"
+            );
+        }
+    }
+
+    function checkJavaScript(code) {
+        try {
+            new Function(code);
+
+            showProblems(
+                [
+                    "No basic JavaScript syntax errors were found.",
+                    "This check does not run or test your code."
+                ],
+                "success"
+            );
+        } catch (error) {
+            showProblems([error.message], "error");
+        }
+    }
+
+    function checkHtml(code) {
+        const problems = [];
+        const openTags = [];
+        const ignoredTags = [
+            "meta", "link", "img", "input",
+            "br", "hr", "source", "area",
+            "base", "embed"
+        ];
+
+        const tagPattern = /<\/?([a-zA-Z0-9-]+)(?:\s[^>]*)?>/g;
+        let match;
+
+        while ((match = tagPattern.exec(code)) !== null) {
+            const fullTag = match[0];
+            const tagName = match[1].toLowerCase();
+
+            if (ignoredTags.includes(tagName) || fullTag.endsWith("/>")) {
+                continue;
+            }
+
+            if (fullTag.startsWith("</")) {
+                const lastTag = openTags.pop();
+
+                if (lastTag !== tagName) {
+                    problems.push(`Closing </${tagName}> does not match the expected HTML tag.`);
+                }
+            } else {
+                openTags.push(tagName);
+            }
+        }
+
+        if (openTags.length > 0) {
+            problems.push(
+                `Unclosed tag(s): ${openTags.map((tag) => `<${tag}>`).join(", ")}`
+            );
+        }
+
+        if (problems.length) {
+            showProblems(problems, "error");
+        } else {
+            showProblems(["Your HTML tags appear balanced."], "success");
+        }
+    }
+
+    function checkCss(code) {
+        let braces = 0;
+
+        for (const character of code) {
+            if (character === "{") braces++;
+            if (character === "}") braces--;
+        }
+
+        if (braces !== 0) {
+            showProblems(["Your CSS curly braces {} do not appear balanced."], "error");
+        } else {
+            showProblems(["Your CSS braces appear balanced."], "success");
+        }
+    }
+
+    function checkCode() {
+        const code = getEditorCode();
+
+        if (code === null) {
+            showProblems(["The editor is still loading. Please wait a moment."], "error");
+            return;
+        }
+
+        if (!code.trim()) {
+            showProblems(["Write some code before checking it."], "error");
+            return;
+        }
+
+        if (languageSelect.value === "python") {
+            checkPython(code);
+        } else if (languageSelect.value === "javascript") {
+            checkJavaScript(code);
+        } else if (languageSelect.value === "html") {
+            checkHtml(code);
+        } else if (languageSelect.value === "css") {
+            checkCss(code);
+        }
+    }
+
+    require.config({
+        paths: {
+            vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs"
+        }
+    });
+
+    require(["vs/editor/editor.main"], function () {
+        editor = monaco.editor.create(document.getElementById("monaco-editor"), {
+            value: initialCode,
+            language: initialLanguage,
+            theme: "vs-dark",
+            automaticLayout: true,
+            fontSize: 14,
+            minimap: {
+                enabled: false
+            },
+            scrollBeyondLastLine: false,
+            padding: {
+                top: 14,
+                bottom: 14
+            }
+        });
+
+        languageSelect.value = initialLanguage;
+
+        editor.onDidChangeModelContent(() => {
+            hasUnsavedChanges = true;
+            setDraftStatus("Unsaved changes...");
+        });
+
+        languageSelect.addEventListener("change", () => {
+            monaco.editor.setModelLanguage(
+                editor.getModel(),
+                languageSelect.value
+            );
+
+            hasUnsavedChanges = true;
+            setDraftStatus("Unsaved changes...");
+        });
+
+        window.setInterval(() => {
+            saveDraft(true);
+        }, AUTOSAVE_DELAY);
+    });
+
+    checkCodeButton.addEventListener("click", checkCode);
+
+    saveDraftButton.addEventListener("click", () => {
+        if (!editor) {
+            setDraftStatus("The editor is still loading. Please wait a moment.", "error");
+            return;
+        }
+
+        hasUnsavedChanges = true;
+        saveDraft(false);
+    });
+
+    codeForm.addEventListener("submit", (event) => {
+        const code = getEditorCode();
+
+        if (code === null) {
+            event.preventDefault();
+            setDraftStatus("The editor is still loading. Please wait a moment.", "error");
+            return;
+        }
+
+        if (!code.trim()) {
+            event.preventDefault();
+            setDraftStatus("Write some code before submitting.", "error");
+            return;
+        }
+
+        const confirmation = window.confirm(
+            {% if submission %}
+                "Submit a new version? Your earlier submissions will remain in History."
+            {% else %}
+                "Submit this assignment? Your saved draft will be removed after submission."
+            {% endif %}
+        );
+
+        if (!confirmation) {
+            event.preventDefault();
+            return;
+        }
+
+        codeInput.value = code;
+        submitButton.disabled = true;
+        submitButton.textContent = "Submitting...";
+    });
+
+    window.addEventListener("beforeunload", () => {
+        if (!editor || !hasUnsavedChanges) {
+            return;
+        }
+
+        const payload = JSON.stringify({
+            code: editor.getValue(),
+            language: languageSelect.value
+        });
+
+        navigator.sendBeacon(
+            `/assignment/${assignmentId}/draft`,
+            new Blob([payload], {
+                type: "application/json"
+            })
+        );
+    });
+</script>
+{% endblock %}

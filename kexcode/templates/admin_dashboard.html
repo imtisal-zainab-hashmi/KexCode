@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block main %}
+<div class="admin-dashboard">
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div>
+            <p class="dashboard-tag">INSTRUCTOR PORTAL</p>
+            <h1 class="dashboard-title">
+                Welcome, {{ session.name }}
+                <span class="role-badge admin">Admin</span>
+            </h1>
+        </div>
+        <div class="dashboard-actions">
+            <a href="/admin/classes" class="btn btn-secondary">+ New Class</a>
+            <a href="/admin/assignments" class="btn btn-primary">+ New Assignment</a>
+        </div>
+    </header>
+
+    <!-- Stats Overview -->
+    <section class="dashboard-stats" aria-label="Club Overview">
+        <div class="student-stat-card">
+            <p>Active Classes</p>
+            <strong>{{ total_classes }}</strong>
+        </div>
+        <div class="student-stat-card">
+            <p>Total Assignments</p>
+            <strong>{{ total_assignments }}</strong>
+        </div>
+        <div class="student-stat-card">
+            <p>Needs Grading</p>
+            <strong class="{% if pending_grading > 0 %}text-cream{% endif %}">{{ pending_grading }}</strong>
+        </div>
+    </section>
+
+    <!-- Classes Section -->
+    <section class="dashboard-section">
+        <div class="section-header">
+            <h2>Your Classes</h2>
+            <a href="/admin/classes" class="section-link">Manage classes &rarr;</a>
+        </div>
+
+        {% if classes %}
+            <div class="admin-class-grid">
+                {% for c in classes %}
+                    <div class="admin-class-card">
+                        <div class="admin-class-info">
+                            <span class="admin-class-badge">CODE: {{ c.code if c.code else 'N/A' }}</span>
+                            <h3>{{ c.name }}</h3>
+                            <p class="admin-class-students">{{ c.student_count }} student{{ '' if c.student_count == 1 else 's' }} enrolled</p>
+                        </div>
+                        <div class="admin-class-actions">
+                            <a href="/admin/assignments" class="btn btn-sm btn-secondary">Assignments</a>
+                            <a href="/admin/classes" class="btn btn-sm btn-primary">Roster</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="dashboard-empty-card">
+                <p>You haven't created any classes yet.</p>
+                <a href="/admin/classes" class="btn btn-primary">Create Your First Class</a>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

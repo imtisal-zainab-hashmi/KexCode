@@ -1,0 +1,142 @@
+{% extends "layout.html" %}
+
+{% block title %}Classroom Insights - KexCode{% endblock %}
+
+{% block main %}
+<div class="insights-container">
+    <div class="page-header">
+        <span class="dashboard-tag">INSTRUCTOR PORTAL</span>
+        <h1 class="page-title">Classroom Insights</h1>
+        <p class="text-muted">Monitor submission completion, track missing assignments, and see club progress.</p>
+    </div>
+
+    {% if classes %}
+    <!-- Class Selector Tabs -->
+    <div class="insights-class-tabs">
+        {% for c in classes %}
+        <a href="/admin/insights?class_id={{ c.id }}"
+           class="class-tab-pill {% if selected_class and selected_class.id == c.id %}active{% endif %}">
+            {{ c.name }}
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if selected_class %}
+    <div class="insights-layout">
+        <!-- Main: Assignment Breakdown -->
+        <div class="insights-main">
+            <h2 class="section-title">Assignment Progress &amp; Completion</h2>
+
+            {% if assignments %}
+            <div class="assignment-insights-list">
+                {% for a in assignments %}
+                <div class="insights-card">
+                    <div class="insights-card-header">
+                        <div>
+                            <h3 class="insights-card-title">{{ a.title }}</h3>
+                            <span class="insights-meta">Due: {{ a.due_date if a.due_date else 'No deadline' }}</span>
+                        </div>
+                        <div class="insights-completion-badge">
+                            {{ a.completion_rate }}% completed
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="insights-progress-track">
+                        <div class="insights-progress-bar" style="width: {{ a.completion_rate }}%;"></div>
+                    </div>
+
+                    <!-- Stats Row -->
+                    <div class="insights-stats-grid">
+                        <div class="stat-mini">
+                            <span class="stat-mini-label">Turned in</span>
+                            <span class="stat-mini-value">{{ a.submitted_count }} / {{ a.total_students }}</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-mini-label">Graded</span>
+                            <span class="stat-mini-value">{{ a.graded_count }} / {{ a.submitted_count }}</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-mini-label">Late</span>
+                            <span class="stat-mini-value {% if a.late_count > 0 %}text-warning{% endif %}">{{ a.late_count }}</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-mini-label">Avg Grade</span>
+                            <span class="stat-mini-value">{{ a.avg_grade if a.avg_grade is not none else '—' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Missing Submissions Collapsible -->
+                    {% if a.missing_students %}
+                    <details class="missing-students-drawer">
+                        <summary class="missing-summary">
+                            <span>Unsubmitted ({{ a.missing_students|length }} students)</span>
+                            <span class="summary-hint">Click to view list</span>
+                        </summary>
+                        <div class="missing-list">
+                            {% for st in a.missing_students %}
+                            <div class="missing-student-item">
+                                <span class="student-name">{{ st.name }}</span>
+                                <span class="student-email">{{ st.email }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    {% else %}
+                    <div class="all-turned-in">
+                        ✓ All enrolled students submitted this assignment.
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state-card">
+                No assignments found for this class. <a href="/admin/assignments">Create an assignment</a>.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar: Live Activity Stream -->
+        <div class="insights-side">
+            <h2 class="section-title">Recent Submissions</h2>
+            <div class="activity-feed-card">
+                {% if recent_activity %}
+                <ul class="activity-feed-list">
+                    {% for item in recent_activity %}
+                    <li class="activity-feed-item">
+                        <div class="activity-feed-top">
+                            <strong class="student-name">{{ item.student_name }}</strong>
+                            <span class="activity-time">{{ item.submitted_at }}</span>
+                        </div>
+                        <div class="activity-feed-assignment">{{ item.assignment_title }}</div>
+                        <div class="activity-feed-tags">
+                            {% if item.is_late %}
+                            <span class="badge-mini late">Late</span>
+                            {% else %}
+                            <span class="badge-mini on-time">On time</span>
+                            {% endif %}
+                            {% if item.grade is not none and item.grade != '' %}
+                            <span class="badge-mini graded">Grade: {{ item.grade }}</span>
+                            {% else %}
+                            <span class="badge-mini pending">Needs Grade</span>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="empty-text">No recent submissions recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state-card">
+        You haven't created any classes yet. <a href="/admin/classes">Create a class</a> to start tracking insights.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

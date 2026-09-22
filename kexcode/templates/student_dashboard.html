@@ -1,0 +1,144 @@
+{% extends "layout.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block main %}
+<div class="student-dashboard">
+
+    <section class="student-welcome">
+        <div>
+            <p class="eyebrow">STUDENT DASHBOARD</p>
+
+            <h1>
+                Welcome back, {{ session.name }}
+                <span class="role-badge student">Student</span>
+            </h1>
+
+            <p class="welcome-message">
+                Keep track of your classes, assignments, and learning progress.
+            </p>
+        </div>
+
+        <a class="dashboard-editor-link" href="/kex">
+            Open Kex Editor →
+        </a>
+    </section>
+
+    <!-- Summary cards -->
+    <section class="student-stat-grid">
+    <article class="student-stat-card">
+        <div>
+            <p>Total assignments</p>
+            <strong>{{ total_assignments }}</strong>
+        </div>
+    </article>
+
+    <article class="student-stat-card">
+        <div>
+            <p>Submitted</p>
+            <strong>{{ submitted_count }}</strong>
+        </div>
+    </article>
+
+    <article class="student-stat-card">
+        <div>
+            <p>Graded</p>
+            <strong>{{ graded_count }}</strong>
+        </div>
+    </article>
+
+    <article class="student-stat-card {% if overdue_count > 0 %}attention-card{% endif %}">
+        <div>
+            <p>Overdue</p>
+            <strong>{{ overdue_count }}</strong>
+        </div>
+    </article>
+</section>
+
+    <!-- Overall progress -->
+    <section class="overall-progress-card">
+        <div class="progress-card-heading">
+            <div>
+                <p class="eyebrow">OVERALL PROGRESS</p>
+                <h2>{{ submitted_count }} of {{ total_assignments }} assignments submitted</h2>
+            </div>
+
+            <strong class="progress-number">{{ progress_percent }}%</strong>
+        </div>
+
+        <div
+            class="progress-bar"
+            role="progressbar"
+            aria-label="Overall assignment progress"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="{{ progress_percent }}"
+        >
+            <div class="progress-bar-fill" style="width: {{ progress_percent }}%;"></div>
+        </div>
+    </section>
+
+    <div class="dashboard-two-column">
+
+    <!-- All assignments -->
+    <section class="dashboard-section" id="all-assignments">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">ALL WORK</p>
+                <h2>Your assignments</h2>
+            </div>
+        </div>
+
+        {% if assignments %}
+        <div class="assignment-table-wrap">
+            <table class="assignment-table">
+                <thead>
+                    <tr>
+                        <th>Assignment</th>
+                        <th>Class</th>
+                        <th>Due date</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for assignment in assignments %}
+                    <tr>
+                        <td>
+                            <strong>{{ assignment.title }}</strong>
+                        </td>
+                        <td>{{ assignment.class_name }}</td>
+                        <td>
+                            {% if assignment.due_display %}
+                                {{ assignment.due_display }}
+                            {% else %}
+                                No deadline
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="assignment-status {{ assignment.status }}">
+                                {{ assignment.status_label }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/assignment/{{ assignment.id }}">Open →</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="dashboard-empty-state">
+            <span></span>
+            <div>
+                <h3>No assignments yet.</h3>
+                <p>Your instructor has not shared any work with you yet. Check back soon.</p>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

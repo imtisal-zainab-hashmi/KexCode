@@ -1,0 +1,149 @@
+{% extends "layout.html" %}
+
+{% block title %}Lecture & Notes | Admin{% endblock %}
+
+{% block main %}
+<div class="admin-page">
+    <header class="page-header">
+        <div>
+            <p class="dashboard-tag">INSTRUCTOR PORTAL</p>
+            <h1 class="page-title">Lecture Notes &amp; Announcements</h1>
+            <p class="page-subtitle">Publish lectures, cheat sheets, and PDF slides for your enrolled students.</p>
+        </div>
+    </header>
+
+    <!-- Create Note Card -->
+    <div class="card create-class-card">
+        <h3>Publish New Material</h3>
+        <form action="/admin/notes" method="POST" enctype="multipart/form-data" class="admin-form">
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="class_id">Target Class</label>
+                    <select id="class_id" name="class_id" required class="form-control">
+                        <option value="" disabled selected>Select class</option>
+                        {% for c in classes %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">Lecture Title / Topic</label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        placeholder="e.g. Week 2: Functions, Scope & Recursion"
+                        required
+                        class="form-control"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="content">Notes Summary &amp; Overview</label>
+                <textarea
+                    id="content"
+                    name="content"
+                    rows="6"
+                    placeholder="Write key concepts, summary, or lecture notes..."
+                    required
+                    class="form-control code-textarea"
+                ></textarea>
+            </div>
+
+           <div class="form-group">
+    <label>Attach PDF Slides / Handout (Optional)</label>
+    <div class="custom-file-upload">
+        <input
+            type="file"
+            id="pdf_file"
+            name="pdf_file"
+            accept=".pdf"
+            onchange="updateFileName(this)"
+        >
+        <label for="pdf_file" class="file-upload-box">
+            <span class="file-upload-icon">📄</span>
+            <div class="file-upload-text">
+                <span id="file-chosen-name" class="file-name-display">Click to select lecture PDF</span>
+                <span class="file-hint-sub">.pdf up to 16MB</span>
+            </div>
+            <span class="file-browse-btn">Browse File</span>
+        </label>
+    </div>
+</div>
+
+<script>
+function updateFileName(input) {
+    const display = document.getElementById('file-chosen-name');
+    if (input.files && input.files[0]) {
+        display.textContent = 'Selected: ' + input.files[0].name;
+        display.classList.add('has-file');
+    } else {
+        display.textContent = 'Click to select lecture PDF';
+        display.classList.remove('has-file');
+    }
+}
+</script>
+
+
+            <button type="submit" class="btn btn-primary">+ Publish to Class</button>
+        </form>
+    </div>
+
+    <!-- Notes List -->
+    <section class="admin-list-section">
+        <div class="section-header">
+            <h2>Published Lectures ({{ notes|length }})</h2>
+        </div>
+
+        {% if notes %}
+            <div class="admin-notes-grid">
+                {% for n in notes %}
+                    <article class="admin-note-card">
+                        <div class="note-top">
+                            <span class="tag-badge">{{ n.class_name }}</span>
+                            {% if n.pdf_filename %}
+                                <span class="tag-badge pdf-badge" style="background: #222; border: 1px solid #444; color: #f7f4ea;">PDF Attached</span>
+                            {% endif %}
+                            <span class="note-id">#{{ n.id }}</span>
+                        </div>
+
+                        <h3 class="note-title">{{ n.title }}</h3>
+                        <p class="note-snippet">{{ n.content }}</p>
+
+                        {% if n.pdf_filename %}
+                            <div class="note-pdf-preview" style="margin: 0.75rem 0;">
+                                <a
+                                    href="{{ url_for('static', filename='uploads/lectures/' ~ n.pdf_filename) }}"
+                                    target="_blank"
+                                    class="pdf-link"
+                                    style="font-size: 0.85rem; color: #f7f4ea; text-decoration: underline;"
+                                >
+                                    📄 View Attached PDF
+                                </a>
+                            </div>
+                        {% endif %}
+
+                        <div class="note-footer">
+                            <form
+                                action="/admin/notes/{{ n.id }}/delete"
+                                method="POST"
+                                onsubmit="return confirm('Delete this lecture note? Students will no longer see it.');"
+                            >
+                                <button type="submit" class="btn btn-danger-ghost btn-xs">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="dashboard-empty-card">
+                <p>No lecture notes published yet. Use the form above to share your first lesson.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

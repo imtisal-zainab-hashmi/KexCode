@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='styles.css') }}"
+    >
+
+    <title>KexCode - {% block title %}{% endblock %}</title>
+</head>
+
+<body class="{% block body_class %}{% endblock %}">
+
+    {% if not session.user_id %}
+        <!-- Brand header for logged-out pages -->
+        <a href="/" class="auth-brand">
+            <span class="auth-brand-logo">&gt;_</span>
+            <span class="auth-brand-name">KexCode</span>
+        </a>
+    {% endif %}
+
+    {% if session.user_id %}
+    <!-- Desktop sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a
+                href="{% if session.role == 'admin' %}/admin/dashboard{% else %}/dashboard{% endif %}"
+                class="sidebar-brand"
+            >
+                <span class="brand-logo">&gt;_</span>
+                <span class="brand-name">KexCode</span>
+            </a>
+
+            <button
+                class="sidebar-toggle"
+                id="sidebar-toggle"
+                type="button"
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3.5" y="4.5" width="17" height="15" rx="2"></rect>
+                    <path d="M10 4.5v15"></path>
+                </svg>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            {% if session.role == "admin" %}
+                <!-- Admin navigation -->
+                <a
+                    href="/admin/dashboard"
+                    class="nav-item {% if request.path == '/admin/dashboard' %}active{% endif %}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 11l9-8 9 8"></path>
+                        <path d="M5 10v10h14V10"></path>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+
+                <a
+    href="/admin/notes"
+    class="nav-item {% if request.path.startswith('/admin/notes') %}active{% endif %}"
+>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+    </svg>
+    <span>Lecture</span>
+</a>
+
+
+                <a
+                    href="/admin/classes"
+                    class="nav-item {% if request.path.startswith('/admin/classes') %}active{% endif %}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"></path>
+                        <circle cx="17" cy="7" r="3"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    </svg>
+                    <span>Classes</span>
+                </a>
+
+              <a
+    href="/admin/insights"
+    class="nav-item {% if request.path.startswith('/admin/insights') %}active{% endif %}"
+>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+        <line x1="18" y1="20" x2="18" y2="10"></line>
+        <line x1="12" y1="20" x2="12" y2="4"></line>
+        <line x1="6" y1="20" x2="6" y2="14"></line>
+    </svg>
+    <span>Insights</span>
+</a>
+
+
+
+                <a
+                    href="/admin/assignments"
+                    class="nav-item {% if request.path.startswith('/admin/assignments') or request.path.startswith('/admin/grading') %}active{% endif %}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <path d="M14 2v6h6"></path>
+                        <path d="M8 13h8"></path>
+                        <path d="M8 17h8"></path>
+                    </svg>
+                    <span>Assignments</span>
+                </a>
+
+                <a
+                    href="/admin/leaderboard"
+                    class="nav-item {% if request.path.startswith('/admin/leaderboard') %}active{% endif %}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 9l6-6 6 6"></path>
+                        <path d="M6 18h12"></path>
+                        <path d="M12 3v15"></path>
+                    </svg>
+                    <span>Leaderboard</span>
+                </a>
+
+            {% else %}
+                <!-- Student navigation -->
+                <a
+                    href="/dashboard"
+                    class="nav-item {% if request.path == '/dashboard' %}active{% endif %}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 11l9-8 9 8"></path>
+                        <path d="M5 10v10h14V10"></path>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+
+                <a
+                    href="/assignments"
+                    class="nav-item {% if request.path == '/assignments' or request.path.startswith('/assignment/') %}active{% endif %}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 2h9l3 3v17H6z"></path>
+                        <path d="M15 2v4h4"></path>
+                        <path d="M9 10h6"></path>
+                        <path d="M9 14h6"></path>
+                        <path d="M9 18h4"></path>
+                    </svg>
+                    <span>Assignments</span>
+                </a>
+
+                <a
+    href="/notes"
+    class="nav-item {% if request.path == '/notes' %}active{% endif %}"
+>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+    </svg>
+    <span>Lecture</span>
+</a>
+
+
+                <a
+                    href="/activity"
+                    class="nav-item {% if request.path == '/activity' %}active{% endif %}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 19V10"></path>
+                        <path d="M10 19V5"></path>
+                        <path d="M16 19v-7"></path>
+                        <path d="M22 19V3"></path>
+                    </svg>
+                    <span>Activity</span>
+                </a>
+
+                <a
+                    href="/my-notes"
+                    class="nav-item {% if request.path.startswith('/my-notes') %}active{% endif %}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 4h16v16H4z"></path>
+                        <path d="M8 8h8"></path>
+                        <path d="M8 12h8"></path>
+                        <path d="M8 16h5"></path>
+                    </svg>
+                    <span>My Notes</span>
+                </a>
+
+                <a
+                    href="/leaderboard"
+                    class="nav-item {% if request.path.startswith('/leaderboard') %}active{% endif %}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 9l6-6 6 6"></path>
+                        <path d="M6 18h12"></path>
+                        <path d="M12 3v15"></path>
+                    </svg>
+                    <span>Leaderboard</span>
+                </a>
+
+                <a
+                    href="/kex"
+                    class="nav-item {% if request.path == '/kex' %}active{% endif %}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                    <span>Kex</span>
+                </a>
+            {% endif %}
+
+            <a href="#" class="nav-item" id="sidebar-chat-link">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>Chat</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="/logout" class="nav-item logout">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Mobile top bar -->
+    <header class="navbar">
+        <div class="nav-left">
+            <button
+                class="hamburger"
+                id="menu-toggle"
+                type="button"
+                aria-label="Open navigation"
+                title="Open navigation"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <a
+                href="{% if session.role == 'admin' %}/admin/dashboard{% else %}/dashboard{% endif %}"
+                class="brand"
+            >
+                <span class="prompt">&gt;_</span>
+                <span>KexCode</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Mobile navigation drawer -->
+    <div class="side-menu" id="side-menu">
+        <div class="side-menu-header">
+            <span>KexCode</span>
+            <button
+                class="close-btn"
+                id="close-menu"
+                type="button"
+                aria-label="Close navigation"
+            >
+                ×
+            </button>
+        </div>
+
+        <nav class="side-menu-links">
+            {% if session.role == "admin" %}
+                <a href="/admin/dashboard">Dashboard</a>
+                <a href="/admin/classes">Classes</a>
+                <a href="/admin/assignments">Assignments</a>
+                <a href="/admin/leaderboard">Leaderboard</a>
+                <a href="/admin/notes">Lecture</a>
+                <a href="/admin/insights">Insights</a>
+
+            {% else %}
+                <a href="/dashboard">Dashboard</a>
+                <a href="/assignments">Assignments</a>
+                <a href="/activity">Activity</a>
+                <a href="/my-notes">My Notes</a>
+                <a href="/leaderboard">Leaderboard</a>
+                <a href="/kex">Kex</a>
+            {% endif %}
+
+            <a href="#" id="mobile-chat-link">Chat</a>
+            <a href="/logout" class="logout">Logout</a>
+        </nav>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block main %}{% endblock %}
+    </main>
+
+    {% if session.user_id %}
+    <button class="kira-fab" id="kira-fab" type="button" aria-label="Open Kira AI" title="Ask Kira">
+        <span>K</span>
+    </button>
+    {% endif %}
+
+    {% if session.user_id %}
+    <!-- Kira Assistant UI Panel -->
+    <div class="kira-overlay" id="kira-overlay"></div>
+
+    <div class="kira-panel" id="kira-panel" aria-hidden="true">
+        <div class="kira-header">
+            <div class="kira-header-title">
+                <span class="kira-avatar">K</span>
+                <div>
+                    <strong>Kira</strong>
+                    <span class="kira-status">AI Assistant</span>
+                </div>
+            </div>
+            <button class="kira-close" id="kira-close" type="button" aria-label="Close Kira">×</button>
+        </div>
+
+        <div class="kira-messages" id="kira-messages">
+            <div class="msg msg-kira">
+                <div class="kira-avatar">K</div>
+                <div class="bubble">Hi! How can I help you today?</div>
+            </div>
+        </div>
+
+        <div class="kira-input-bar">
+            <input
+                type="text"
+                id="kira-input"
+                placeholder="Ask Kira a question..."
+                autocomplete="off"
+            >
+            <button id="kira-send" type="button">Send</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        const sidebar = document.getElementById("sidebar");
+        const sidebarToggle = document.getElementById("sidebar-toggle");
+
+        const menuToggle = document.getElementById("menu-toggle");
+        const sideMenu = document.getElementById("side-menu");
+        const closeMenuButton = document.getElementById("close-menu");
+        const overlay = document.getElementById("overlay");
+
+        const kiraFab = document.getElementById("kira-fab");
+        const kiraPanel = document.getElementById("kira-panel");
+        const kiraOverlay = document.getElementById("kira-overlay");
+        const kiraClose = document.getElementById("kira-close");
+        const kiraInput = document.getElementById("kira-input");
+        const kiraSend = document.getElementById("kira-send");
+        const kiraMessages = document.getElementById("kira-messages");
+
+        // Remember user's sidebar preference (collapsed or open)
+        const savedSidebarState = localStorage.getItem("kex_sidebar_collapsed");
+        if (savedSidebarState === "true") {
+            sidebar?.classList.add("collapsed");
+        }
+
+        sidebarToggle?.addEventListener("click", () => {
+            const isCollapsed = sidebar.classList.toggle("collapsed");
+            localStorage.setItem("kex_sidebar_collapsed", isCollapsed);
+
+            sidebarToggle.setAttribute(
+                "aria-label",
+                isCollapsed ? "Expand sidebar" : "Collapse sidebar"
+            );
+            sidebarToggle.setAttribute(
+                "title",
+                isCollapsed ? "Expand sidebar" : "Collapse sidebar"
+            );
+        });
+
+        function openMenu() {
+            sideMenu?.classList.add("open");
+            overlay?.classList.add("show");
+            menuToggle?.classList.add("active");
+        }
+
+        function closeMenu() {
+            sideMenu?.classList.remove("open");
+            overlay?.classList.remove("show");
+            menuToggle?.classList.remove("active");
+        }
+
+        menuToggle?.addEventListener("click", openMenu);
+        closeMenuButton?.addEventListener("click", closeMenu);
+        overlay?.addEventListener("click", closeMenu);
+
+        function openKira() {
+            closeMenu();
+            kiraPanel?.classList.add("open");
+            kiraOverlay?.classList.add("show");
+            setTimeout(() => kiraInput?.focus(), 250);
+        }
+
+        function closeKira() {
+            kiraPanel?.classList.remove("open");
+            kiraOverlay?.classList.remove("show");
+        }
+
+        document.getElementById("sidebar-chat-link")?.addEventListener("click", (event) => {
+            event.preventDefault();
+            openKira();
+        });
+
+        document.getElementById("mobile-chat-link")?.addEventListener("click", (event) => {
+            event.preventDefault();
+            openKira();
+        });
+
+        kiraFab?.addEventListener("click", openKira);
+        kiraClose?.addEventListener("click", closeKira);
+        kiraOverlay?.addEventListener("click", closeKira);
+
+        function addKiraMessage(type, text) {
+            const message = document.createElement("div");
+            message.className = `msg msg-${type}`;
+
+            if (type === "user") {
+                const bubble = document.createElement("div");
+                bubble.className = "bubble";
+                bubble.textContent = text;
+                message.appendChild(bubble);
+            } else {
+                const avatar = document.createElement("div");
+                avatar.className = "kira-avatar";
+                avatar.textContent = "K";
+
+                const bubble = document.createElement("div");
+                bubble.className = "bubble";
+                bubble.textContent = text;
+
+                message.appendChild(avatar);
+                message.appendChild(bubble);
+            }
+
+            kiraMessages?.appendChild(message);
+
+            if (kiraMessages) {
+                kiraMessages.scrollTop = kiraMessages.scrollHeight;
+            }
+
+            return message;
+        }
+
+        async function sendToKira() {
+            const question = kiraInput?.value.trim();
+
+            if (!question || !kiraInput || !kiraSend) {
+                return;
+            }
+
+            addKiraMessage("user", question);
+            kiraInput.value = "";
+            kiraSend.disabled = true;
+
+            const thinkingMessage = addKiraMessage("kira", "Kira is thinking...");
+
+            try {
+                const response = await fetch("/kira/ask", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+
+                const data = await response.json();
+                thinkingMessage.remove();
+
+                addKiraMessage(
+                    "kira",
+                    data.answer || data.error || "Something went wrong."
+                );
+            } catch (error) {
+                thinkingMessage.remove();
+                addKiraMessage("kira", "Failed to get a response. Please try again.");
+                console.error("Kira error:", error);
+            } finally {
+                kiraSend.disabled = false;
+                kiraInput.focus();
+            }
+        }
+
+        kiraSend?.addEventListener("click", sendToKira);
+
+        kiraInput?.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                sendToKira();
+            }
+        });
+    </script>
+</body>
+</html>

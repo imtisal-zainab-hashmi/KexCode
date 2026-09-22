@@ -1,0 +1,120 @@
+{% extends "layout.html" %}
+
+{% block title %}Submission History | KexCode{% endblock %}
+
+{% block main %}
+<div class="submission-history-page">
+
+    <div class="page-top-row">
+        <div>
+            <a class="back-link" href="/assignment/{{ assignment.id }}">
+                ← Back to assignment
+            </a>
+
+            <p class="eyebrow">{{ assignment.class_name }}</p>
+            <h1>{{ assignment.title }}</h1>
+            <p class="muted-text">
+                Deadline: {{ assignment.due_display }}
+            </p>
+        </div>
+
+        <a class="button button-secondary" href="/assignment/{{ assignment.id }}">
+            Open workspace
+        </a>
+    </div>
+
+    <section class="history-summary">
+        <div class="summary-item">
+            <span class="summary-label">Total submissions</span>
+            <strong>{{ submissions | length }}</strong>
+        </div>
+
+        <div class="summary-item">
+            <span class="summary-label">Latest status</span>
+
+            {% if submissions %}
+                {% if submissions[0].grade is not none %}
+                    <strong>Graded: {{ submissions[0].grade }}</strong>
+                {% else %}
+                    <strong>Awaiting grading</strong>
+                {% endif %}
+            {% else %}
+                <strong>Not submitted</strong>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if submissions %}
+        <section class="submission-list">
+            {% for submission in submissions %}
+                <article class="submission-history-card">
+
+                    <div class="submission-card-header">
+                        <div>
+                            <p class="submission-number">
+                                Submission {{ submissions | length - loop.index0 }}
+                            </p>
+
+                            <h2>
+                                {% if loop.first %}
+                                    Latest submission
+                                {% else %}
+                                    Earlier submission
+                                {% endif %}
+                            </h2>
+
+                            <p class="muted-text">
+                                Submitted {{ submission.submitted_display }}
+                            </p>
+                        </div>
+
+                        <div class="submission-badges">
+                            {% if submission.is_late %}
+                                <span class="status-badge overdue">Late</span>
+                            {% else %}
+                                <span class="status-badge submitted">On time</span>
+                            {% endif %}
+
+                            {% if submission.grade is not none %}
+                                <span class="status-badge graded">
+                                    Grade: {{ submission.grade }}
+                                </span>
+                            {% else %}
+                                <span class="status-badge pending">
+                                    Awaiting grade
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if submission.feedback %}
+                        <div class="feedback-box">
+                            <p class="feedback-label">Instructor feedback</p>
+                            <p>{{ submission.feedback }}</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="submitted-code-section">
+                        <p class="feedback-label">Submitted code</p>
+                        <pre><code>{{ submission.code }}</code></pre>
+                    </div>
+
+                </article>
+            {% endfor %}
+        </section>
+    {% else %}
+        <section class="empty-history">
+            <p class="eyebrow">No submissions yet</p>
+            <h2>You have not submitted this assignment.</h2>
+            <p class="muted-text">
+                Your drafts stay private until you submit your work.
+            </p>
+
+            <a class="button" href="/assignment/{{ assignment.id }}">
+                Start assignment
+            </a>
+        </section>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+{% block body_class %}auth-page{% endblock %}
+
+{% block title %}Log in{% endblock %}
+
+{% block main %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <h1>Welcome back</h1>
+        <p style="text-align:center; margin-bottom: 28px;">
+            Sign in to your KexCode account
+        </p>
+
+        <form action="/login" method="post" class="stacked-form">
+            <input autocomplete="off" autofocus name="email" placeholder="Email address" type="email" required>
+            <input name="password" placeholder="Password" type="password" required>
+            <button type="submit">Log in</button>
+        </form>
+
+        <p style="text-align:center; margin-top: 22px; font-size: 14px;">
+            Don’t have an account? <a href="/register">Create one</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

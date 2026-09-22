@@ -1,0 +1,143 @@
+{% extends "layout.html" %}
+
+{% block title %}Assignments Management | Admin{% endblock %}
+
+{% block main %}
+<div class="admin-page">
+
+    <section class="admin-header-row">
+        <div>
+            <p class="dashboard-tag">INSTRUCTOR PORTAL</p>
+            <h1>Assignment Management</h1>
+            <p class="muted-text">Create, configure, and monitor coding assignments across all classes.</p>
+        </div>
+    </section>
+
+    <!-- Create Assignment Card -->
+    <section class="admin-card">
+        <h2>Create New Assignment</h2>
+
+        <form action="/admin/assignments" method="post" class="admin-form">
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="class_id">Class</label>
+                    <select id="class_id" name="class_id" required>
+                        <option value="" disabled selected>Select class</option>
+                        {% for c in classes %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="language">Primary Language</label>
+                    <select id="language" name="language">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="title">Assignment Title</label>
+                    <input id="title" type="text" name="title" placeholder="e.g. Problem Set 1: Binary Search" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="due_date">Due Date</label>
+                    <input id="due_date" type="date" name="due_date">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Instructions / Problem Description</label>
+                <textarea id="description" name="description" rows="4" placeholder="Detail the problem specification, requirements, and constraints..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="starter_code">Starter Code Template</label>
+                <textarea id="starter_code" name="starter_code" rows="5" class="code-textarea" placeholder="# Optional starter code provided to students..."></textarea>
+            </div>
+
+            <button type="submit" class="button">Publish Assignment</button>
+        </form>
+    </section>
+
+    <!-- Assignments List -->
+    <section class="admin-list-section">
+        <div class="section-title-row">
+            <h2>All Assignments</h2>
+            <span class="count-pill">{{ assignments | length }} total</span>
+        </div>
+
+        {% if assignments %}
+            <div class="admin-assignment-grid">
+                {% for a in assignments %}
+                    <article class="admin-assignment-card">
+                        <div class="card-top">
+                            <div>
+                                <span class="tag-badge">{{ a.class_name }}</span>
+                                <span class="lang-badge">{{ a.language or 'python' }}</span>
+                                <h3>{{ a.title }}</h3>
+                            </div>
+                            <div class="due-badge">
+                                {% if a.due_date %}
+                                    Due: {{ a.due_date }}
+                                {% else %}
+                                    No deadline
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if a.description %}
+                            <p class="assignment-desc-snippet">{{ a.description }}</p>
+                        {% endif %}
+
+                        <!-- Live Metrics -->
+                        <div class="metrics-row">
+                            <div class="metric-pill">
+                                <strong>{{ a.submitted_count }} / {{ a.enrolled_count }}</strong>
+                                <span>Submitted</span>
+                            </div>
+                            <div class="metric-pill">
+                                <strong>{{ a.graded_count }}</strong>
+                                <span>Graded</span>
+                            </div>
+                            <div class="metric-pill">
+                                <strong>{{ a.submitted_count - a.graded_count }}</strong>
+                                <span>Pending Review</span>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="card-footer-actions">
+                            <a href="/admin/grading/{{ a.id }}" class="button button-small">
+                                Review &amp; Grade
+                            </a>
+
+                            <a href="/admin/assignments/{{ a.id }}/edit" class="secondary-btn button-small">
+                                Edit
+                            </a>
+
+                            <form action="/admin/assignments/{{ a.id }}/delete" method="post" onsubmit="return confirm('Delete this assignment permanently? All student drafts and submissions for it will also be deleted.');">
+                                <button type="submit" class="delete-link-btn">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-history">
+                <p class="dashboard-tag">No assignments yet</p>
+                <h2>Create your first problem set above.</h2>
+            </div>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

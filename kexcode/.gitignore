@@ -1,0 +1,81 @@
+# Environment variables and secrets
+.env
+.env.local
+
+# Database (contains real student data — never push this)
+*.db
+*.sqlite
+*.sqlite3
+
+# Flask session files
+flask_session/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+*.egg-info/
+
+# Editor/OS junk
+.vscode/
+.DS_Store
+*.log
+
+
+# Environment variables and secrets (CRITICAL - DO NOT COMMIT)
+.env
+
+# Virtual Environment
+venv/
+env/
+.venv/
+ENV/
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Flask session files (if using filesystem sessions)
+flask_session/
+
+# SQLite Database (allows graders to initialize fresh via schema.sql)
+*.db
+*.sqlite
+*.sqlite3
+kexcode.db
+
+# User uploaded files (keeps the folder structure via .gitkeep)
+static/uploads/lectures/*
+!static/uploads/lectures/.gitkeep
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# IDE & Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Sensitive credentials
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Database (keep clean for grading/fresh setups)
+*.db
+kexcode.db
