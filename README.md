@@ -21,12 +21,12 @@ The platform follows a clean, high-contrast monochrome aesthetic (black, white, 
 
 | Student Workspace & Editor | Classroom Insights & Grading |
 | :---: | :---: |
-| ![Student Editor](docs/screenshots/editor.png) | ![Admin Grading](docs/screenshots/grading.png) |
+| ![Student Editor](assets/EDITOR.png) | ![Admin Grading](assets/ADASH.png) |
 | *Monaco editor with browser-only checks and Kira AI tutor* | *Instructor submission review, feedback, and scoring* |
 
 | Student Dashboard | Lecture Notes & PDF Hub |
 | :---: | :---: |
-| ![Student Dashboard](docs/screenshots/dashboard.png) | ![Lecture Library](docs/screenshots/lectures.png) |
+| ![Student Dashboard](assets/SDASH.png) | ![Lecture Library](assets/NOTES.png) |
 | *Progress tracking, streaks, and assignment statuses* | *Curated reading materials with downloadable lecture PDFs* |
 
 ---
@@ -156,6 +156,15 @@ flask run --debug
 Open http://127.0.0.1:5000 in your browser.
 ```
 
+---
+
+## Screenshots
+
+| ![](assets/ACT.png) | ![](assets/ICLASS.png) |
+
+| ![](assets/KIRA.png) |
+
+---
 ## License
 This project is licensed under the MIT License — see the LICENSE file for details.
 
