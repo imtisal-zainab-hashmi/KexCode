@@ -79,3 +79,35 @@ __pycache__/
 # Database (keep clean for grading/fresh setups)
 *.db
 kexcode.db
+
+# Secrets & credentials (NEVER commit)
+.env
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Flask session storage (temporary login sessions)
+flask_session/
+
+# Database (rebuild fresh from schema.sql)
+*.db
+kexcode.db
+
+# Uploaded lecture PDFs (user data, not source code)
+static/uploads/lectures/*
+!static/uploads/lectures/.gitkeep
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# VS Code settings
+.vscode/
+.idea/
